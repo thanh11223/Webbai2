@@ -43,3 +43,5 @@ Giám sát môi trường trong nông nghiệp thông minh
 Quản lý chất lượng không khí trong nhà hoặc ngoài trời
 
 Dự án IoT cho học tập và nghiên cứu
+
+<img width="1914" height="857" alt="image" src="https://github.com/user-attachments/assets/0b7980bc-651b-473c-a3c9-2c86fe21e6a7" />
