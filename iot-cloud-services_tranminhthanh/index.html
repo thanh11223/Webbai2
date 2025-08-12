@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Environment Data</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(to bottom right, #e6f0ff, #ffffff);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #004d99;
+            margin-bottom: 5px;
+            font-size: 2.2em;
+        }
+        #date {
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+        }
+        th {
+            background-color: #cc006d;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+        tr:hover {
+            background-color: #e0f3ff;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: white;
+        }
+        .btn-add { background-color: #28a745; }
+        .btn-edit { background-color: #ffc107; }
+        .btn-delete { background-color: #dc3545; }
+        .form-container {
+            margin: 20px auto;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 50%;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            width: calc(100% - 20px);
+        }
+    </style>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <h1>Environment Data</h1>
+    <div id="date"></div>
+
+    <div class="form-container">
+        <input type="text" id="name" placeholder="Name">
+        <input type="number" id="temperature" placeholder="Temperature (°C)">
+        <input type="number" id="humidity" placeholder="Humidity (%)">
+        <input type="number" id="wind" placeholder="Wind (m/s)">
+        <input type="number" id="pressure" placeholder="Pressure (hPa)">
+        <button class="btn btn-add" onclick="addData()">Add</button>
+    </div>
+
+    <table id="data-table">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Time</th>
+            <th>Temp (°C)</th>
+            <th>Humidity (%)</th>
+            <th>Wind (m/s)</th>
+            <th>Pressure (hPa)</th>
+            <th>Actions</th>
+        </tr>
+    </table>
+
+    <script>
+        // Hiển thị ngày tháng
+        function updateDate() {
+            const now = new Date();
+            document.getElementById("date").innerText = now.toLocaleDateString("vi-VN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+        }
+        updateDate();
+
+        // Firebase config
+        var firebaseConfig = {
+            apiKey: "AIzaSyBhL3MtY-R42LcNEvSlprV068U1pPShJm4",
+            authDomain: "tran-minh-thanh.firebaseapp.com",
+            databaseURL: "https://tran-minh-thanh-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tran-minh-thanh",
+            storageBucket: "tran-minh-thanh.firebasestorage.app",
+            messagingSenderId: "961280810590",
+            appId: "1:961280810590:web:28c08a853aad90f45cdecf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+        var ref = database.ref("environment_data");
+
+        // Load dữ liệu
+        ref.on("value", function(snapshot) {
+            var table = document.getElementById("data-table");
+            table.innerHTML = `
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Time</th>
+                    <th>Temp (°C)</th>
+                    <th>Humidity (%)</th>
+                    <th>Wind (m/s)</th>
+                    <th>Pressure (hPa)</th>
+                    <th>Actions</th>
+                </tr>
+            `;
+            snapshot.forEach(function(childSnapshot) {
+                var key = childSnapshot.key;
+                var data = childSnapshot.val();
+                var row = `
+                    <tr>
+                        <td>${data.ID}</td>
+                        <td>${data.Name}</td>
+                        <td>${data.Time}</td>
+                        <td>🌡 ${data.Temperature}</td>
+                        <td>💧 ${data.Humidity}</td>
+                        <td>${data.Wind}</td>
+                        <td>${data.Pressure}</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editData('${key}', '${data.Name}', '${data.Temperature}', '${data.Humidity}', '${data.Wind}', '${data.Pressure}')">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteData('${key}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                table.innerHTML += row;
+            });
+        });
+
+        // Thêm dữ liệu
+        function addData() {
+            var name = document.getElementById("name").value;
+            var temp = document.getElementById("temperature").value;
+            var hum = document.getElementById("humidity").value;
+            var wind = document.getElementById("wind").value;
+            var press = document.getElementById("pressure").value;
+            var id = Date.now();
+            var time = new Date().toLocaleString("vi-VN");
+
+            ref.push({
+                ID: id,
+                Name: name,
+                Time: time,
+                Temperature: temp,
+                Humidity: hum,
+                Wind: wind,
+                Pressure: press
+            });
+        }
+
+        // Xóa dữ liệu
+        function deleteData(key) {
+            if (confirm("Bạn có chắc muốn xóa dữ liệu này?")) {
+                ref.child(key).remove();
+            }
+        }
+
+        // Sửa dữ liệu
+        function editData(key, name, temp, hum, wind, press) {
+            document.getElementById("name").value = name;
+            document.getElementById("temperature").value = temp;
+            document.getElementById("humidity").value = hum;
+            document.getElementById("wind").value = wind;
+            document.getElementById("pressure").value = press;
+
+            document.querySelector(".btn-add").innerText = "Update";
+            document.querySelector(".btn-add").onclick = function () {
+                ref.child(key).update({
+                    Name: document.getElementById("name").value,
+                    Temperature: document.getElementById("temperature").value,
+                    Humidity: document.getElementById("humidity").value,
+                    Wind: document.getElementById("wind").value,
+                    Pressure: document.getElementById("pressure").value
+                });
+                document.querySelector(".btn-add").innerText = "Add";
+                document.querySelector(".btn-add").onclick = addData;
+            }
+        }
+    </script>
+</body>
+</html>
